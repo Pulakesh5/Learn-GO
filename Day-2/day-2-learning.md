@@ -9,8 +9,8 @@
     import "fmt"
 
     import {
-    			"fmt"
-    			"math/rand"
+        "fmt"
+        "math/rand"
     }
     ```
 - When importing a package, only exported names can be used. Exported names start with a capital letter.
@@ -26,23 +26,24 @@
     ```
     ```go
     func add(x int, y int) int {
-    		return x+y
+        return x+y
     }
     //Go allows defining types of similar variables together
     func add(x, y, z int) int {
-    		return x + y + z
+        return x + y + z
     }
     ```
 - Function can return any number of results.
   - ```go
     func swap(x, y string) (string, string) {
-    		return y, x
+        return y, x
     }
 
     func main() {
-    		a, b := swap("hello", "world!")
-    		fmt.Println(a,b)
-    }// output : world! hello
+        a, b := swap("hello", "world!")
+        fmt.Println(a,b)
+    }
+    // output : world! hello
     ```
 - Go’s return values may be named. They are treated as variables defined at the top of the function. A `return` statement without arguments returns the named return values. This is known as **_naked return_**.
   - ```go
@@ -73,18 +74,18 @@
     var c, python, java = true, false, "Yes!"
 
     func main() {
-    		fmt.Println(i, j, c, python, java)
+        fmt.Println(i, j, c, python, java)
     }
     // output: 1 2 true false Yes!
     ```
 - Inside a function, the := short assignment statement can be used in place of a `var` declaration with implicit type. Outside a function, every statement begins with a keyword(`var` , `func` and so on) and so := construct is not available.
   - ```go
     func main() {
-    		var i, j int = 1, 2
-    		k := 3
-    		c, python, java := true, false, "No!"
+        var i, j int = 1, 2
+        k := 3
+        c, python, java := true, false, "No!"
 
-    		fmt.Println(i, j, k, c, python, java)
+        fmt.Println(i, j, k, c, python, java)
     }
     ```
 - Go’s basic types are given below. The `int`, `uint` and `uintptr` types are usually 32-bits wide on 32-bit systems and 64 bits wide on 64-bit systems.
@@ -133,7 +134,7 @@
     }
     // Output: 3 4 5
     ```
-- Constants are declared with `const` keyword. They can be of any type int, bool, string etc. But const can not be declared using := syntax.
+- Constants are declared with `const` keyword. They can be of any type int, bool, string etc. But const can not be declared using `:=` syntax.
   - ```go
     const Pi = 3.14
 
