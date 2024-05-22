@@ -4,7 +4,8 @@
 
 - Every Go program is made up of packages. Programs start running in package `main`
 - Import statements are like this
-  - ```go
+  -
+    ```go
     import "fmt"
 
     import {
