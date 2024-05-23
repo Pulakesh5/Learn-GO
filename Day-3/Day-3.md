@@ -1,9 +1,7 @@
 # Day -3
 
 - Implementing sqrt() using newton’s method:
-    - 
-        
-        ```go
+    - ```go
         func Sqrt(x float64) float64 {
         	const lim = 1e-6
         	sqrtValue := 1.0
@@ -21,9 +19,7 @@
         ```
         
 - GO’s switch case format is similar to C, C++ etc. But one thing that sets it apart is it only runs the selected part, not the cases that follow.
-    - 
-        
-        ```go
+    - ```go
         func main() {
         	switch os := runtime.GOOS; os {
         	case "darwin":
@@ -39,9 +35,7 @@
         ```
         
 - switch a condition is same as `switch true` . Clean way to write long `if-else` statements.
-    - 
-        
-        ```go
+    -   ```go
         func main() {
         t := time.Now()
         switch {
@@ -55,9 +49,7 @@
         ```
         
 - A defer statement defers the execution of a function until the surrounding function returns. Deferred function calls are pushed onto a stack. When surrounding function returns, deferred calls are executed in LIFO order
-    - 
-        
-        ```go
+    - ```go
         package main
         
         import "fmt"
@@ -109,9 +101,7 @@
 ## More Types - structs, slice and maps
 
 - Pointers in GO are just like they are in C++, but without pointer arithmetic. Zero value of pointer in GO is `nil`
-    - 
-        
-        ```go
+    - ```go
         func main() {
         	i, j := 42, 2701
         
@@ -131,9 +121,7 @@
         ```
         
 - A struct is like a structure in C++. To access fields of a struct `.` notation is used. It allows us to use pointer as a variable without dereferencing [in terms of notation]
-    - 
-        
-        ```go
+    - ```go
         package main
         
         import "fmt"
@@ -157,9 +145,7 @@
         ```
         
 - Example of struct literal
-    - 
-        
-        ```go
+    - ```go
         var (
         	v1 = Vertex{1, 2}  // has type Vertex
         	v2 = Vertex{Y: 1}  // Y:0 is implicit
@@ -174,9 +160,7 @@
         ```
         
 - The expression `var a [10]int` declares `a` as an array of ten integers.
-    - 
-        
-        ```go
+    - ```go
         func main() {
         	var a [2]string
         	a[0] = "Hello"
@@ -194,9 +178,7 @@
         ```
         
     - Slice is like vector in C++, dynamic and flexible. The type `[]T` is a slice with elements of type `T` . `a[low : high]` This selects the `a[low]` but excludes `a[high]` .
-        - 
-            
-            ```go
+    - ```go
             func main() {
             	primes := [6]int{2, 3, 5, 7, 11, 13}
             
