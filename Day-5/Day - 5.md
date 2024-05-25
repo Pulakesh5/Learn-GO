@@ -102,7 +102,6 @@ Here is the custom implementation of `Image` struct :
 -->
 <div style="text-align: center;">
 <img src="Day%20-%205%20de2672e818d841d487097b4f00d47de2/Untitled.png" alt="A beautiful RGB image created in GO" width="600" height="450">
-A beautiful RGB image created in GO
 </div>
 
 
