@@ -13,10 +13,7 @@ func init() {
 	tpl = template.Must(template.New("").Parse(defaultHandlerTmplt))
 }
 
-var tpl *template.Template
-var defaultHandlerTmplt = `
-<!DOCTYPE html>
-
+var defaultHandlerTmplt = `<!DOCTYPE html>
 <html>
     <head>
         <title>Choose Your Own Adventure</title>
@@ -29,28 +26,56 @@ var defaultHandlerTmplt = `
         {{end}}
         <ul>
         {{range .Options}}
-            <li><a href="/{{.Chapter}}">{{.Text}}</a></li>
+            <li><a href="/story/{{.Chapter}}">{{.Text}}</a></li>
         {{end}}
         </ul>
     </body>
 </html>`
 
-func NewHandler(s Story) http.Handler {
-	return handler{s}
+var tpl *template.Template
+
+type HandlerOption func(h *handler)
+
+func WithTemplate(t *template.Template) HandlerOption {
+	return func(h *handler) {
+		h.t = t
+	}
+}
+
+func WithPath(fn func(r *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFn = fn
+	}
+}
+
+func NewHandler(s Story, opts ...HandlerOption) http.Handler {
+	h := handler{s, tpl, defaultPathFn}
+	for _, opt := range opts {
+		opt(&h)
+	}
+
+	return h
 }
 
 type handler struct {
-	s Story
+	s      Story
+	t      *template.Template
+	pathFn func(r *http.Request) string
 }
 
-func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func defaultPathFn(r *http.Request) string {
 	path := strings.TrimSpace(r.URL.Path)
 	if path == "" || path == "/" {
 		path = "/intro"
 	}
 	path = path[1:]
+	return path
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := defaultPathFn(r)
 	if chapter, ok := h.s[path]; ok {
-		err := tpl.Execute(w, chapter)
+		err := h.t.Execute(w, chapter)
 		if err != nil {
 			log.Printf("%v", err)
 			http.Error(w, "Something went wrong ...", http.StatusInternalServerError)
