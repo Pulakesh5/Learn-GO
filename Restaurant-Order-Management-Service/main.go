@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	orderedmap "github.com/wk8/go-ordered-map"
 )
 
 type MenuItem struct {
@@ -15,14 +17,14 @@ type MenuItem struct {
 	Price       int
 }
 
-func getMenu() (map[int]MenuItem, map[int]MenuItem) {
+func getMenu() (*orderedmap.OrderedMap, *orderedmap.OrderedMap) { //(map[int]MenuItem, map[int]MenuItem) {
 	bengaliMenu := []MenuItem{
 		{1, "Machher Jhol", "Traditional Bengali fish curry cooked with potatoes and tomatoes.", 300},
 		{2, "Ilish Bhapa", "Steamed Hilsa fish cooked in mustard and coconut paste.", 450},
 		{3, "Chingri Malai Curry", "Prawns cooked in a rich coconut milk gravy.", 400},
-		{4, "Mangsher Jhol", "Traditional Bengali mutton curry cooked with potatoes.", 350},
+		{4, "Mangsher Jhol", "Traditional Bengali mutton curry cooked with potatoes.", 250},
 		{5, "Aloor Dom", "Spicy potato curry.", 200},
-		{6, "Shukto", "A mix of vegetables cooked in a bitter and creamy sauce.", 250},
+		{6, "Shukto", "A mix of vegetables cooked in a bitter and creamy sauce.", 200},
 		{7, "Posto", "Poppy seed paste curry with potatoes.", 180},
 		{8, "Luchi", "Deep-fried flatbreads.", 100},
 		{9, "Mishti Doi", "Sweetened yogurt.", 120},
@@ -32,7 +34,7 @@ func getMenu() (map[int]MenuItem, map[int]MenuItem) {
 		{13, "Doi Maach", "Fish cooked in a yogurt-based gravy.", 320},
 		{14, "Bhapa Chingri", "Steamed prawns in mustard sauce.", 400},
 		{15, "Beguni", "Batter-fried eggplant slices.", 80},
-		{16, "Mochar Ghonto", "Banana flower curry.", 200},
+		{16, "Mochar Ghonto", "Banana flower curry.", 180},
 		{17, "Kumro Bharta", "Mashed pumpkin with spices.", 150},
 		{18, "Chingri Paturi", "Prawns marinated in spices and steamed in banana leaves.", 420},
 		{19, "Patishapta", "Rice flour crepes filled with sweetened coconut and jaggery.", 150},
@@ -63,39 +65,68 @@ func getMenu() (map[int]MenuItem, map[int]MenuItem) {
 	}
 
 	// Convert slices to maps
-	bengaliMenuMap := make(map[int]MenuItem)
+	// bengaliMenuMap := make(map[int]MenuItem)
+	bengaliMenuMap := orderedmap.New()
 	for _, item := range bengaliMenu {
-		bengaliMenuMap[item.ID] = item
+		// bengaliMenuMap[item.ID] = item
+		bengaliMenuMap.Set(item.ID, item)
 	}
 
-	northIndianMenuMap := make(map[int]MenuItem)
+	// northIndianMenuMap := make(map[int]MenuItem)
+	northIndianMenuMap := orderedmap.New()
 	for _, item := range northIndianMenu {
-		northIndianMenuMap[item.ID] = item
+		// northIndianMenuMap[item.ID] = item
+		northIndianMenuMap.Set(item.ID, item)
 	}
 
 	return bengaliMenuMap, northIndianMenuMap
 }
 
-func showMenu(bengaliMenu map[int]MenuItem, northIndianMenu map[int]MenuItem) {
+func showMenu(bengaliMenu *orderedmap.OrderedMap, northIndianMenu *orderedmap.OrderedMap) {
 	fmt.Print("\n\n************************** MENUCARD **************************\n\n")
 	fmt.Print("************************** Bengali Dishes ****************************\n")
-	for _, item := range bengaliMenu {
+	var item MenuItem
+	for pair := bengaliMenu.Oldest(); pair != nil; pair = pair.Next() {
+		item = pair.Value.(MenuItem)
 		fmt.Printf("%-2d. %-30s  ₹%-5d\n   %s\n", item.ID, item.Name, item.Price, item.Description)
 	}
 	fmt.Println()
 	fmt.Print("************************** North Indian Dishes ****************************\n")
-	for _, item := range northIndianMenu {
+	for pair := northIndianMenu.Oldest(); pair != nil; pair = pair.Next() {
+		item = pair.Value.(MenuItem)
 		fmt.Printf("%-2d. %-30s  ₹%-5d\n   %s\n", item.ID, item.Name, item.Price, item.Description)
 	}
 }
 
-func takeOrder(bengaliMenu map[int]MenuItem, northIndianMenu map[int]MenuItem) {
+func printBill(order map[MenuItem]int) {
+	generateBillHeader := "************************************* Generating Bill *************************************"
+	fmt.Println()
+	fmt.Println(generateBillHeader)
+
+	subTotalExclGST := 0
+	itemSubTotal := 0
+
+	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+	fmt.Printf(" %-30s %-20s %-20s %-20s\n", "Item Name", "Price(₹)", "Quantity", "Total Price(₹)")
+	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+
+	for orderItem := range order {
+		itemSubTotal = orderItem.Price * order[orderItem]
+		subTotalExclGST += itemSubTotal
+		fmt.Printf("%-30s  ₹%-20d  %-20v  ₹%-20d\n", orderItem.Name, orderItem.Price, order[orderItem], itemSubTotal)
+	}
+	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+	fmt.Printf("%50s Subtotal (excluding GST): ₹%d\n", " ", subTotalExclGST)
+	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+}
+
+func takeOrder(bengaliMenu *orderedmap.OrderedMap, northIndianMenu *orderedmap.OrderedMap) {
 	order := make(map[MenuItem]int)
 	reader := bufio.NewReader(os.Stdin)
 	var orderID int
 	var choice string
 	var item MenuItem
-	TotalItems := (len(bengaliMenu) + len(northIndianMenu))
+	TotalItems := (bengaliMenu.Len() + northIndianMenu.Len())
 	fmt.Print("\n")
 
 	for {
@@ -114,12 +145,14 @@ func takeOrder(bengaliMenu map[int]MenuItem, northIndianMenu map[int]MenuItem) {
 		}
 
 		if orderID <= 20 {
-			item = bengaliMenu[orderID]
+			menuItem, _ := bengaliMenu.Get(orderID)
+			item = menuItem.(MenuItem)
 		} else {
-			item = northIndianMenu[orderID]
+			menuItem, _ := northIndianMenu.Get(orderID)
+			item = menuItem.(MenuItem)
 		}
 
-		fmt.Printf("Enter how many plates of %s : ", item.Name)
+		fmt.Printf("How many %s do you want?: ", item.Name)
 		quantityInput, _ := reader.ReadString('\n')
 		quantityInput = strings.TrimSpace(quantityInput)
 		quantity, err := strconv.Atoi(quantityInput)
@@ -128,8 +161,10 @@ func takeOrder(bengaliMenu map[int]MenuItem, northIndianMenu map[int]MenuItem) {
 			continue
 		}
 		order[item] = quantity
+		fmt.Printf("You just ordered %d %s\n", quantity, item.Name)
 	}
-	fmt.Print("\n\nWe will retun with your food in no time.\n")
+	printBill(order)
+	fmt.Print("\nWe will retun with your food in no time.\n\n")
 }
 
 func main() {
