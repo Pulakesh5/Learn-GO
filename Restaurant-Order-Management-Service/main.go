@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	orderedmap "github.com/wk8/go-ordered-map"
 )
@@ -16,6 +17,8 @@ type MenuItem struct {
 	Description string
 	Price       int
 }
+
+var TotalItems int
 
 func getMenu() (*orderedmap.OrderedMap, *orderedmap.OrderedMap) { //(map[int]MenuItem, map[int]MenuItem) {
 	bengaliMenu := []MenuItem{
@@ -98,26 +101,139 @@ func showMenu(bengaliMenu *orderedmap.OrderedMap, northIndianMenu *orderedmap.Or
 	}
 }
 
-func printBill(order map[MenuItem]int) {
-	generateBillHeader := "************************************* Generating Bill *************************************"
+func printDashedLine() {
+	dashedLine := strings.Repeat("-", 110)
+	fmt.Print("+")
+	for _, dash := range dashedLine {
+		fmt.Print(string(dash))
+		time.Sleep(time.Millisecond * 10)
+	}
+	fmt.Print("+\n")
+}
+func printGenerateBill() {
+	generateBillHeader := "*********************************************** Generating Bill ***********************************************"
 	fmt.Println()
-	fmt.Println(generateBillHeader)
+	for _, char := range generateBillHeader {
+		fmt.Print(string(char))
+		time.Sleep(time.Millisecond * 10)
+	}
+	fmt.Println()
+}
+func printBill(order map[MenuItem]int) {
+	printGenerateBill()
 
 	subTotalExclGST := 0
 	itemSubTotal := 0
-
-	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
-	fmt.Printf(" %-30s %-20s %-20s %-20s\n", "Item Name", "Price(₹)", "Quantity", "Total Price(₹)")
-	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+	printDashedLine()
+	fmt.Printf("%-15s %-30s %-20s %-20s %-20s\n", "Item ID", "Item Name", "Price(₹)", "Quantity", "Total Price(₹)")
+	printDashedLine()
 
 	for orderItem := range order {
 		itemSubTotal = orderItem.Price * order[orderItem]
 		subTotalExclGST += itemSubTotal
-		fmt.Printf("%-30s  ₹%-20d  %-20v  ₹%-20d\n", orderItem.Name, orderItem.Price, order[orderItem], itemSubTotal)
+		fmt.Printf("%-15d %-30s  ₹%-20d  %-20v  ₹%-20d\n", orderItem.ID, orderItem.Name, orderItem.Price, order[orderItem], itemSubTotal)
+		time.Sleep(time.Second * 1)
 	}
-	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
-	fmt.Printf("%50s Subtotal (excluding GST): ₹%d\n", " ", subTotalExclGST)
-	fmt.Printf("+%s+\n", strings.Repeat("-", 90))
+	printDashedLine()
+
+	fmt.Printf("%67s Subtotal (excluding GST): ₹%5.2f\n", " ", float64(subTotalExclGST))
+	totalBillinclGST := float64(subTotalExclGST) * 1.05
+	fmt.Printf("%67s Total Bill (including GST): ₹%2.2f\n", " ", totalBillinclGST)
+
+	printDashedLine()
+}
+
+func updateOrder(update string, order *map[MenuItem]int) {
+	details := strings.Split(update, " ")
+	itemId, _ := strconv.Atoi(details[0])
+	itemQuantity, _ := strconv.Atoi(details[1])
+	bengaliMenu, northIndianMenu := getMenu()
+
+	if itemId < 0 || itemId > TotalItems {
+		fmt.Println("Invalid Item ID")
+	} else if itemId <= bengaliMenu.Len() {
+		item, _ := bengaliMenu.Get(itemId)
+		menuItem := item.(MenuItem)
+		if itemQuantity <= 0 {
+			delete(*order, menuItem)
+			fmt.Printf("%s removed from your order.\n", menuItem.Name)
+		} else {
+			(*order)[menuItem] = itemQuantity
+			fmt.Printf("\n%s updated in your order.\n", menuItem.Name)
+			fmt.Printf("Prensent order of %s is : %d\n", menuItem.Name, (*order)[menuItem])
+		}
+
+	} else {
+		item, _ := northIndianMenu.Get(itemId)
+		menuItem := item.(MenuItem)
+		if itemQuantity <= 0 {
+			delete(*order, item.(MenuItem))
+			fmt.Printf("%s removed from your order.\n", menuItem.Name)
+		} else {
+			(*order)[item.(MenuItem)] = itemQuantity
+			fmt.Printf("\n%s updated in your order.\n", menuItem.Name)
+			fmt.Printf("Prensent order of %s is : %d\n", menuItem.Name, (*order)[menuItem])
+		}
+
+	}
+}
+
+func deleteItem(update string, order *map[MenuItem]int) {
+	details := strings.Split(update, " ")
+	itemId, _ := strconv.Atoi(details[0])
+	bengaliMenu, northIndianMenu := getMenu()
+	var item interface{}
+	var menuItem MenuItem
+
+	if itemId < 0 || itemId > TotalItems {
+		fmt.Printf("Invalide item ID\n")
+	} else if itemId <= bengaliMenu.Len() {
+		item, _ = bengaliMenu.Get(itemId)
+		menuItem = item.(MenuItem)
+		delete(*order, menuItem)
+		fmt.Printf("%s removed from your order.\n", menuItem.Name)
+	} else {
+		item, _ = northIndianMenu.Get(itemId)
+		menuItem = item.(MenuItem)
+		delete(*order, menuItem)
+		fmt.Printf("%s removed from your order.\n", menuItem.Name)
+	}
+}
+
+func modifyOrder(order *map[MenuItem]int) {
+	reader := bufio.NewReader(os.Stdin)
+	var choice string
+	var orderUpdate string
+
+	for {
+		fmt.Println("\nPress '1' to update item quantity.")
+		fmt.Println("Press '2' to delete an item from the order list.")
+		fmt.Println("Press F to finalize the order")
+
+		choice, _ = reader.ReadString('\n')
+		choice = strings.TrimSpace(choice)
+
+		if choice[0] == 'F' || choice[0] == 'f' {
+			break
+		}
+
+		// choice, _ = reader.ReadString('\n')
+		// choice = strings.TrimSpace(choice)
+		switch choice {
+		case "1":
+			fmt.Println("Enter the item Id followed by updated quantity :")
+			orderUpdate, _ = reader.ReadString('\n')
+			orderUpdate = strings.TrimSpace(orderUpdate)
+			updateOrder(orderUpdate, order)
+		case "2":
+			fmt.Println("Enter the item ID you want to delete from the order:")
+			orderUpdate, _ = reader.ReadString('\n')
+			orderUpdate = strings.TrimSpace(orderUpdate)
+			deleteItem(orderUpdate, order)
+		}
+
+	}
+
 }
 
 func takeOrder(bengaliMenu *orderedmap.OrderedMap, northIndianMenu *orderedmap.OrderedMap) {
@@ -164,12 +280,23 @@ func takeOrder(bengaliMenu *orderedmap.OrderedMap, northIndianMenu *orderedmap.O
 		fmt.Printf("You just ordered %d %s\n", quantity, item.Name)
 	}
 	printBill(order)
+	fmt.Print("Do you wish to change your order?\n")
+
+	choice, _ = reader.ReadString('\n')
+	choice = strings.TrimSpace(choice)
+
+	if choice[0] == 'y' || choice[0] == 'Y' {
+		modifyOrder(&order)
+		printBill(order)
+	}
+
 	fmt.Print("\nWe will retun with your food in no time.\n\n")
 }
 
 func main() {
 	fmt.Println("************************** Welcome to Bengal Bay **************************")
 	bengaliMenu, northIndianMenu := getMenu()
+	TotalItems = bengaliMenu.Len() + northIndianMenu.Len()
 	showMenu(bengaliMenu, northIndianMenu)
 	takeOrder(bengaliMenu, northIndianMenu)
 }
